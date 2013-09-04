@@ -70,6 +70,13 @@ class Redis
     end
 
     class Multi < self
+      def inherited_connection?
+        # We can always assume we don't have an inherited connection here,
+        # becuase the pipelined commands are actually executed
+        # by a Redis::Client instance
+        false
+      end
+
       def finish(replies)
         exec = replies.last
 

@@ -5,6 +5,7 @@ require "helper"
 class TestPipeliningCommands < Test::Unit::TestCase
 
   include Helper::Client
+  include Helper::ForkedClient
 
   def test_bulk_commands
     r.pipelined do
@@ -15,6 +16,22 @@ class TestPipeliningCommands < Test::Unit::TestCase
     assert_equal 2, r.llen("foo")
     assert_equal "s2", r.lpop("foo")
     assert_equal "s1", r.lpop("foo")
+  end
+
+  def test_forked_bulk_comments
+    assert_equal false,  r.client.inherited_connection?
+
+    forked_result = forked_client do
+      r.client.reconnect
+      r.pipelined do
+        r.lpush "foo", "s1"
+        r.lpush "foo", "s2"
+      end
+
+      r.llen("foo")
+    end
+
+    assert_equal 2, forked_result
   end
 
   def test_multi_bulk_commands
