@@ -5,6 +5,7 @@ require "helper"
 class TestTransactions < Test::Unit::TestCase
 
   include Helper::Client
+  include Helper::ForkedClient
 
   def test_multi_discard
     r.multi
@@ -23,6 +24,19 @@ class TestTransactions < Test::Unit::TestCase
     end
 
     assert_equal "s1", r.get("foo")
+  end
+
+  def test_multi_exec_with_a_block_from_forked
+    forked_result = forked_client do
+      r.client.reconnect
+      r.multi do |multi|
+        multi.set "foo", "s1"
+      end
+
+      r.get("foo")
+    end
+
+    assert_equal "s1", forked_result
   end
 
   def test_multi_exec_with_a_block_doesn_t_return_replies_for_multi_and_exec
