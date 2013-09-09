@@ -174,6 +174,25 @@ module Helper
     end
   end
 
+  module ForkedClient
+    def forked_client
+      read, write = IO.pipe
+
+      fork do
+        val = yield
+        write.puts Marshal.dump(val)
+      end
+
+      Process.wait
+      write.close
+
+      child_val = Marshal.load(read.read)
+      read.close
+
+      child_val
+    end
+  end
+
   module Distributed
 
     include Generic
@@ -195,4 +214,6 @@ module Helper
       Redis::Distributed.new(NODES, _format_options(options).merge(:driver => ENV["conn"]))
     end
   end
+
+
 end

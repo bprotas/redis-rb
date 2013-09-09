@@ -5,6 +5,7 @@ require "helper"
 class TestConnectionHandling < Test::Unit::TestCase
 
   include Helper::Client
+  include Helper::ForkedClient
 
   def test_auth
     commands = {
@@ -15,6 +16,16 @@ class TestConnectionHandling < Test::Unit::TestCase
     redis_mock(commands, :password => "secret") do |redis|
       assert_equal "bar", redis.get("foo")
     end
+  end
+
+  def test_forked_connect
+    assert_equal false, redis.client.inherited_connection?
+
+    child_redis_inherited = forked_client do
+      redis.client.inherited_connection?
+    end
+
+    assert_equal true, child_redis_inherited
   end
 
   def test_ping

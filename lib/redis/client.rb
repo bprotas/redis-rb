@@ -252,6 +252,10 @@ class Redis
       with_reconnect(false, &blk)
     end
 
+    def inherited_connection?
+      Process.pid != @pid
+    end
+
   protected
 
     def logging(commands)
@@ -283,7 +287,7 @@ class Redis
 
       begin
         if connected?
-          if Process.pid != @pid
+          if inherited_connection?
             raise InheritedError,
               "Tried to use a connection from a child process without reconnecting. " +
               "You need to reconnect to Redis after forking."
